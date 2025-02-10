@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register - SAT Practice Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .errorlist {
+            color: red;
+            list-style: none;
+            padding: 0;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h2>Register for SAT Practice Tests</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% if form.errors %}
+            <div class="errorlist">
+                Please correct the errors below.
+            </div>
+        {% endif %}
+        
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <ul class="errorlist">
+                    {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a href="{% url 'accounts:login' %}">Login here</a></p>
+</body>
+</html>

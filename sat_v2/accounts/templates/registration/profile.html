@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Profile - SAT Practice Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .profile-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .nav-links {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .nav-links a {
+            display: inline-block;
+            margin-right: 15px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-section">
+        <h2>Student Profile</h2>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Name</div>
+                <div class="stat-value">{{ student.first_name }} {{ student.last_name }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Email</div>
+                <div class="stat-value">{{ student.email }}</div>
+            </div>
+            {% if student.grade_level %}
+            <div class="stat-card">
+                <div class="stat-label">Grade Level</div>
+                <div class="stat-value">{{ student.grade_level }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <h3>Test Statistics</h3>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Tests Taken</div>
+                <div class="stat-value">{{ student.total_tests_taken }}</div>
+            </div>
+            {% if student.average_score %}
+            <div class="stat-card">
+                <div class="stat-label">Average Score</div>
+                <div class="stat-value">{{ student.average_score }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="nav-links">
+        <a href="{% url 'accounts:password_change' %}">Change Password</a>
+        <a href="{% url 'accounts:logout' %}">Logout</a>
+    </div>
+</body>
+</html>
