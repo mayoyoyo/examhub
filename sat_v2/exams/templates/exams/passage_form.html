@@ -1,0 +1,121 @@
+{% extends 'registration/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'exam_list' %}">Exams</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'exam_detail' exam.pk %}">{{ exam.title }}</a></li>
+            <li class="breadcrumb-item active">Add Question</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Add Question</h3>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.section.id_for_label }}" class="form-label">{{ form.section.label }}</label>
+                            {{ form.section }}
+                            {% if form.section.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.section.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.passage_text.id_for_label }}" class="form-label">{{ form.passage_text.label }}</label>
+                            {{ form.passage_text }}
+                            {% if form.passage_text.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.passage_text.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.question_text.id_for_label }}" class="form-label">{{ form.question_text.label }}</label>
+                            {{ form.question_text }}
+                            {% if form.question_text.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.question_text.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="choices mb-3">
+                            <label class="form-label">Answer Choices</label>
+                            {% for i in "1234"|make_list %}
+                            <div class="mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">{{ i }}</span>
+                                    {{ form|dict_lookup:"choice_"|add:i }}
+                                </div>
+                                {% with field_name="choice_"|add:i %}
+                                {% if form|dict_lookup:field_name %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form|dict_lookup:field_name.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label d-block">{{ form.correct_choice.label }}</label>
+                            {% for value, label in form.correct_choice.field.choices %}
+                            <div class="form-check">
+                                <input type="radio" 
+                                       name="{{ form.correct_choice.name }}" 
+                                       value="{{ value }}" 
+                                       id="correct_{{ value }}"
+                                       class="form-check-input"
+                                       {% if form.correct_choice.value == value %}checked{% endif %}>
+                                <label class="form-check-label" for="correct_{{ value }}">
+                                    {{ label }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                            {% if form.correct_choice.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.correct_choice.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Add Question</button>
+                            <a href="{% url 'exam_detail' exam.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

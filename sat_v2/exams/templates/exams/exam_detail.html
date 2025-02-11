@@ -1,0 +1,159 @@
+{% extends 'registration/base.html' %}
+{% load exam_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'exam_list' %}">Exams</a></li>
+            <li class="breadcrumb-item active">{{ exam.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Exam Details -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title">{{ exam.title }}</h3>
+                        <span class="badge {% if exam.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ exam.is_active|yesno:"Active,Inactive" }}
+                        </span>
+                    </div>
+                    <p class="text-muted">Created on {{ exam.created_at|date:"M d, Y" }}</p>
+                    <p><strong>Time Limit:</strong> {{ exam.time_limit }} minutes</p>
+
+                    <!-- Section Management -->
+                    {% for section in "12"|make_list %}
+                    <div class="section-block mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4>Section {{ section }}</h4>
+                            <a href="{% url 'passage_create' exam.pk %}?section={{ section }}" class="btn btn-sm btn-primary">
+                                Add Question
+                            </a>
+                        </div>
+                        
+                        {% with passages=exam.passages.all %}
+                        <div class="passages mt-3">
+                            {% for passage in passages %}
+                            {% if passage.section == section|add:"0" %}
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Question {{ forloop.counter }}</h5>
+                                        <div>
+                                            <span class="badge {% if passage.question %}text-bg-success{% else %}text-bg-warning{% endif %} me-2">
+                                                {{ passage.question|yesno:"Complete,Incomplete" }}
+                                            </span>
+                                            {% if passage.question %}
+                                            <a href="{% url 'passage_detail' exam.pk passage.pk %}" class="btn btn-sm btn-outline-primary">
+                                                View Question
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <p class="text-muted mb-0 mt-2">
+                                        {{ passage.text|truncatewords:30 }}
+                                    </p>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        {% if not passages|has_passages_in_section:section %}
+                        <div class="alert alert-info">
+                            No passages added to Section {{ section }} yet.
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Assignment -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">Assign Exam</h4>
+                    {% if students %}
+                    <form method="post" action="{% url 'assign_exam' exam.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="student_id" class="form-label">Select Student</label>
+                            <select name="student_id" id="student_id" class="form-select" required>
+                                <option value="">Choose a student...</option>
+                                {% for student in students %}
+                                <option value="{{ student.id }}">{{ student.get_full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Assign Exam</button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No students available for assignment.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Assigned Students</h4>
+                    {% with assigned_students=exam.student_attempts.all %}
+                    {% if assigned_students %}
+                    <div class="list-group">
+                        {% for attempt in assigned_students %}
+                        <div class="list-group-item">
+                            <h6 class="mb-1">{{ attempt.student.get_full_name }}</h6>
+                            <p class="mb-1">
+                                Status: 
+                                {% if attempt.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                <br>
+                                <small>Score: {{ attempt.score }}/54</small>
+                                <br>
+                                <small>Section 1: {{ attempt.section1_score }}/27</small>
+                                <br>
+                                <small>Section 2: {{ attempt.section2_score }}/27</small>
+                                {% elif attempt.status == 'in_progress' %}
+                                <span class="badge bg-warning">In Progress</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Not Started</span>
+                                {% endif %}
+                            </p>
+                            {% if attempt.completed_at %}
+                            <small class="text-muted">
+                                Completed on {{ attempt.completed_at|date:"M d, Y" }}
+                            </small>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No students assigned yet.</p>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .section-block {
+        border-top: 1px solid #dee2e6;
+        padding-top: 1.5rem;
+    }
+    .section-block:first-child {
+        border-top: none;
+        padding-top: 0;
+    }
+</style>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends 'registration/base.html' %}
+{% load exam_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'exam_list' %}">Exams</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'exam_detail' passage.exam.pk %}">{{ passage.exam.title }}</a></li>
+            <li class="breadcrumb-item active">Section {{ passage.section }} - Passage {{ passage.order }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Passage Details -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">Reading Passage</h3>
+                    <div class="passage-text mt-3">
+                        {{ passage.text|linebreaks }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0">Question</h3>
+                </div>
+                <div class="card-body">
+                    {% if not passage.question %}
+                    <form method="post" action="{% url 'add_question' passage.exam.pk passage.pk %}" class="mb-4">
+                        {% csrf_token %}
+                        
+                        {% if question_form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in question_form.non_field_errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ question_form.question_text.id_for_label }}" class="form-label">Question</label>
+                            {{ question_form.question_text }}
+                            {% if question_form.question_text.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in question_form.question_text.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="choices mb-3">
+                            <label class="form-label">Answer Choices</label>
+                            <div class="mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">1</span>
+                                    {{ question_form.choice_1 }}
+                                </div>
+                                {% if question_form.choice_1.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in question_form.choice_1.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">2</span>
+                                    {{ question_form.choice_2 }}
+                                </div>
+                                {% if question_form.choice_2.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in question_form.choice_2.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">3</span>
+                                    {{ question_form.choice_3 }}
+                                </div>
+                                {% if question_form.choice_3.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in question_form.choice_3.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">4</span>
+                                    {{ question_form.choice_4 }}
+                                </div>
+                                {% if question_form.choice_4.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in question_form.choice_4.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label d-block">Correct Answer</label>
+                            {% for value, label in question_form.correct_choice.field.choices %}
+                            <div class="form-check">
+                                <input type="radio" 
+                                       name="{{ question_form.correct_choice.name }}" 
+                                       value="{{ value }}" 
+                                       id="correct_{{ value }}"
+                                       class="form-check-input"
+                                       {% if question_form.correct_choice.value == value %}checked{% endif %}>
+                                <label class="form-check-label" for="correct_{{ value }}">
+                                    {{ label }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                            {% if question_form.correct_choice.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in question_form.correct_choice.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Add Question</button>
+                        </div>
+                    </form>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="question-card">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Question</h5>
+                                <p>{{ passage.question.text }}</p>
+                                
+                                <div class="choices">
+                                    {% for choice in passage.question.choices.all %}
+                                    <div class="choice mb-2 {% if choice.is_correct %}correct{% endif %}">
+                                        <i class="bi {% if choice.is_correct %}bi-check-circle-fill text-success{% else %}bi-circle{% endif %}"></i>
+                                        {{ choice.text }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .passage-text {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 0.375rem;
+    }
+    .choice {
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+    }
+    .choice.correct {
+        background-color: #d4edda;
+    }
+    .choice i {
+        margin-right: 0.5rem;
+    }
+    .explanation {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.25rem;
+    }
+</style>
+{% endblock %}
+{% endblock %}

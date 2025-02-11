@@ -1,132 +1,137 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ user_type|title }} Profile - SAT Practice Test</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-        .profile-section {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        .stat-card {
-            background-color: white;
-            padding: 15px;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .stat-label {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 5px;
-        }
-        .stat-value {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #007bff;
-        }
-        .nav-links {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-        }
-        .nav-links form {
-            display: inline;
-        }
-        .nav-links a, .nav-links button {
-            display: inline-block;
-            margin-right: 15px;
-            color: #007bff;
-            text-decoration: none;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            font: inherit;
-        }
-        .nav-links a:hover, .nav-links button:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <div class="profile-section">
-        <h2>{{ user_type|title }} Profile</h2>
-        <div class="stats">
-            {% if user_type == 'academy' %}
-            <div class="stat-card">
-                <div class="stat-label">Academy Name</div>
-                <div class="stat-value">{{ user.first_name }}</div>
+{% extends 'registration/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Welcome, {{ user.get_full_name }}</h3>
+                    <p class="text-muted">
+                        {% if user.is_academy %}
+                        Academy Administrator
+                        {% elif user.is_student %}
+                        Student
+                        {% elif user.is_teacher %}
+                        Teacher
+                        {% endif %}
+                    </p>
+
+                    {% if user.is_academy %}
+                    <!-- Academy Dashboard -->
+                    <div class="dashboard-section mt-4">
+                        <h4>Exam Management</h4>
+                        <div class="list-group">
+                            <a href="{% url 'exam_list' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                My Exams
+                                <span class="badge bg-primary rounded-pill">{{ user.created_exams.count }}</span>
+                            </a>
+                            <a href="{% url 'exam_create' %}" class="list-group-item list-group-item-action">
+                                Create New Exam
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-section mt-4">
+                        <h4>Students</h4>
+                        <div class="list-group">
+                            {% for student in user.members.all %}
+                            {% if student.is_student %}
+                            <div class="list-group-item">
+                                <h6 class="mb-1">{{ student.get_full_name }}</h6>
+                                <p class="mb-1">
+                                    <small>Tests Taken: {{ student.total_tests_taken }}</small>
+                                    {% if student.average_score %}
+                                    <br>
+                                    <small>Average Score: {{ student.average_score|floatformat:1 }}</small>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if user.is_student %}
+                    <!-- Student Dashboard -->
+                    <div class="dashboard-section mt-4">
+                        <h4>My Exams</h4>
+                        <div class="list-group">
+                            <a href="{% url 'student_exam_list' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                View All Exams
+                                <span class="badge bg-primary rounded-pill">{{ user.exam_attempts.count }}</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-section mt-4">
+                        <h4>My Progress</h4>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <h5>Tests Taken</h5>
+                                        <p class="h2">{{ user.total_tests_taken }}</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <h5>Average Score</h5>
+                                        <p class="h2">{{ user.average_score|default:"N/A"|floatformat:1 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if user.is_teacher %}
+                    <!-- Teacher Dashboard -->
+                    <div class="dashboard-section mt-4">
+                        <h4>Academy</h4>
+                        <p>{{ user.academy_profile.first_name }}</p>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Email</div>
-                <div class="stat-value">{{ user.email }}</div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Account Details</h4>
+                    <dl class="row">
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">{{ user.email }}</dd>
+
+                        <dt class="col-sm-4">Name</dt>
+                        <dd class="col-sm-8">{{ user.get_full_name }}</dd>
+
+                        {% if user.is_student %}
+                        <dt class="col-sm-4">Academy</dt>
+                        <dd class="col-sm-8">{{ user.academy_profile.first_name }}</dd>
+
+                        {% if user.grade_level %}
+                        <dt class="col-sm-4">Grade</dt>
+                        <dd class="col-sm-8">{{ user.grade_level }}</dd>
+                        {% endif %}
+                        {% endif %}
+                    </dl>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Secret Code</div>
-                <div class="stat-value">{{ secret_code }}</div>
-            </div>
-            {% else %}
-            <div class="stat-card">
-                <div class="stat-label">Name</div>
-                <div class="stat-value">{{ user.first_name }} {{ user.last_name }}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Email</div>
-                <div class="stat-value">{{ user.email }}</div>
-            </div>
-            {% if user_type == 'student' and grade_level %}
-            <div class="stat-card">
-                <div class="stat-label">Grade Level</div>
-                <div class="stat-value">{{ grade_level }}</div>
-            </div>
-            {% endif %}
-            {% if academy_profile %}
-            <div class="stat-card">
-                <div class="stat-label">Academy</div>
-                <div class="stat-value">{{ academy_profile.first_name }}</div>
-            </div>
-            {% endif %}
-            {% endif %}
         </div>
     </div>
+</div>
 
-    {% if user_type == 'student' %}
-    <div class="profile-section">
-        <h3>Test Statistics</h3>
-        <div class="stats">
-            <div class="stat-card">
-                <div class="stat-label">Tests Taken</div>
-                <div class="stat-value">{{ total_tests_taken }}</div>
-            </div>
-            {% if average_score %}
-            <div class="stat-card">
-                <div class="stat-label">Average Score</div>
-                <div class="stat-value">{{ average_score }}</div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-
-    <div class="nav-links">
-        <a href="{% url 'accounts:password_change' %}">Change Password</a>
-        <form method="post" action="{% url 'accounts:logout' %}">
-            {% csrf_token %}
-            <button type="submit">Logout</button>
-        </form>
-    </div>
-</body>
-</html>
+{% block extra_css %}
+<style>
+    .dashboard-section {
+        border-top: 1px solid #dee2e6;
+        padding-top: 1.5rem;
+    }
+    .dashboard-section:first-child {
+        border-top: none;
+        padding-top: 0;
+    }
+</style>
+{% endblock %}
+{% endblock %}

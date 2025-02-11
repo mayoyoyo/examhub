@@ -1,3 +1,2 @@
 from django.contrib import admin
-
-# Register your models here.
+# Exams are managed directly by academies through the interface
