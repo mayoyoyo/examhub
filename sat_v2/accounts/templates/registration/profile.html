@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Student Profile - SAT Practice Test</title>
+    <title>{{ user_type|title }} Profile - SAT Practice Test</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -42,57 +42,91 @@
             padding-top: 20px;
             border-top: 1px solid #ddd;
         }
-        .nav-links a {
+        .nav-links form {
+            display: inline;
+        }
+        .nav-links a, .nav-links button {
             display: inline-block;
             margin-right: 15px;
             color: #007bff;
             text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            font: inherit;
         }
-        .nav-links a:hover {
+        .nav-links a:hover, .nav-links button:hover {
             text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="profile-section">
-        <h2>Student Profile</h2>
+        <h2>{{ user_type|title }} Profile</h2>
         <div class="stats">
+            {% if user_type == 'academy' %}
             <div class="stat-card">
-                <div class="stat-label">Name</div>
-                <div class="stat-value">{{ student.first_name }} {{ student.last_name }}</div>
+                <div class="stat-label">Academy Name</div>
+                <div class="stat-value">{{ user.first_name }}</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Email</div>
-                <div class="stat-value">{{ student.email }}</div>
+                <div class="stat-value">{{ user.email }}</div>
             </div>
-            {% if student.grade_level %}
+            <div class="stat-card">
+                <div class="stat-label">Secret Code</div>
+                <div class="stat-value">{{ secret_code }}</div>
+            </div>
+            {% else %}
+            <div class="stat-card">
+                <div class="stat-label">Name</div>
+                <div class="stat-value">{{ user.first_name }} {{ user.last_name }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Email</div>
+                <div class="stat-value">{{ user.email }}</div>
+            </div>
+            {% if user_type == 'student' and grade_level %}
             <div class="stat-card">
                 <div class="stat-label">Grade Level</div>
-                <div class="stat-value">{{ student.grade_level }}</div>
+                <div class="stat-value">{{ grade_level }}</div>
             </div>
+            {% endif %}
+            {% if academy_profile %}
+            <div class="stat-card">
+                <div class="stat-label">Academy</div>
+                <div class="stat-value">{{ academy_profile.first_name }}</div>
+            </div>
+            {% endif %}
             {% endif %}
         </div>
     </div>
 
+    {% if user_type == 'student' %}
     <div class="profile-section">
         <h3>Test Statistics</h3>
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-label">Tests Taken</div>
-                <div class="stat-value">{{ student.total_tests_taken }}</div>
+                <div class="stat-value">{{ total_tests_taken }}</div>
             </div>
-            {% if student.average_score %}
+            {% if average_score %}
             <div class="stat-card">
                 <div class="stat-label">Average Score</div>
-                <div class="stat-value">{{ student.average_score }}</div>
+                <div class="stat-value">{{ average_score }}</div>
             </div>
             {% endif %}
         </div>
     </div>
+    {% endif %}
 
     <div class="nav-links">
         <a href="{% url 'accounts:password_change' %}">Change Password</a>
-        <a href="{% url 'accounts:logout' %}">Logout</a>
+        <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+        </form>
     </div>
 </body>
 </html>

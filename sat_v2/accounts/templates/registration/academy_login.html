@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login - SAT Practice Test</title>
+    <title>Academy Login - SAT Practice Test</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -40,27 +40,19 @@
             padding: 0;
             margin: 5px 0;
         }
-        .register-options {
+        .login-options {
             margin-top: 20px;
             padding-top: 20px;
             border-top: 1px solid #ddd;
         }
-        .register-options p {
-            margin: 10px 0;
-        }
-        .academy-login {
-            margin-top: 20px;
-            text-align: center;
-            color: #666;
-        }
     </style>
 </head>
 <body>
-    <h2>Student/Teacher Login</h2>
+    <h2>Academy Login</h2>
     
     {% if form.errors %}
         <div class="errorlist">
-            Your username and password didn't match. Please try again.
+            Your email and password didn't match. Please try again.
         </div>
     {% endif %}
 
@@ -78,14 +70,8 @@
         <input type="hidden" name="next" value="{{ next }}" />
     </form>
     
-    <div class="register-options">
-        <h3>Don't have an account?</h3>
-        <p>Are you a student? <a href="{% url 'accounts:student_register' %}">Register as Student</a></p>
-        <p>Are you a teacher? <a href="{% url 'accounts:teacher_register' %}">Register as Teacher</a></p>
-    </div>
-
-    <div class="academy-login">
-        <p>Are you an academy administrator? <a href="{% url 'accounts:academy_login' %}">Academy Login</a></p>
+    <div class="login-options">
+        <p>Are you a student or teacher? <a href="{% url 'accounts:login' %}">Login here</a></p>
     </div>
 </body>
 </html>
