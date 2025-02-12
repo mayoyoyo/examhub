@@ -23,7 +23,7 @@ class ReadingPassage(models.Model):
         ordering = ['section']
     
     def __str__(self):
-        return f"Passage {self.order} - Section {self.section} - {self.exam.title}"
+        return f"Section {self.section} - {self.exam.title}"
 
 class Question(models.Model):
     """Model for multiple choice questions"""

@@ -1,4 +1,5 @@
 {% extends 'registration/base.html' %}
+{% load exam_filters %}
 
 {% block content %}
 <div class="container mt-4">
@@ -69,16 +70,20 @@
                             <div class="mb-2">
                                 <div class="input-group">
                                     <span class="input-group-text">{{ i }}</span>
-                                    {{ form|dict_lookup:"choice_"|add:i }}
+                                    {% with field_name="choice_"|add:i %}
+                                        {{ form|dict_lookup:field_name }}
+                                    {% endwith %}
                                 </div>
                                 {% with field_name="choice_"|add:i %}
-                                {% if form|dict_lookup:field_name %}
+                                {% with field=form|dict_lookup:field_name %}
+                                {% if field.errors %}
                                 <div class="invalid-feedback d-block">
-                                    {% for error in form|dict_lookup:field_name.errors %}
+                                    {% for error in field.errors %}
                                     {{ error }}
                                     {% endfor %}
                                 </div>
                                 {% endif %}
+                                {% endwith %}
                                 {% endwith %}
                             </div>
                             {% endfor %}

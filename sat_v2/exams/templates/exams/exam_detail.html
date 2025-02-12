@@ -101,43 +101,57 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title">Assigned Students</h4>
-                    {% with assigned_students=exam.student_attempts.all %}
-                    {% if assigned_students %}
-                    <div class="list-group">
-                        {% for attempt in assigned_students %}
-                        <div class="list-group-item">
-                            <h6 class="mb-1">{{ attempt.student.get_full_name }}</h6>
-                            <p class="mb-1">
-                                Status: 
-                                {% if attempt.status == 'completed' %}
-                                <span class="badge bg-success">Completed</span>
-                                <br>
-                                <small>Score: {{ attempt.score }}/54</small>
-                                <br>
-                                <small>Section 1: {{ attempt.section1_score }}/27</small>
-                                <br>
-                                <small>Section 2: {{ attempt.section2_score }}/27</small>
-                                {% elif attempt.status == 'in_progress' %}
-                                <span class="badge bg-warning">In Progress</span>
-                                {% else %}
-                                <span class="badge bg-secondary">Not Started</span>
-                                {% endif %}
-                            </p>
-                            {% if attempt.completed_at %}
-                            <small class="text-muted">
-                                Completed on {{ attempt.completed_at|date:"M d, Y" }}
-                            </small>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
+                    <h4 class="card-title">Student Performance</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Attempts</th>
+                                    <th>Highest Score</th>
+                                    <th>Average Score</th>
+                                    <th>Latest Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in student_data %}
+                                <tr>
+                                    <td>{{ data.student.get_full_name }}</td>
+                                    <td>{{ data.completed_attempts }}/{{ data.total_attempts }}</td>
+                                    <td>
+                                        {% if data.highest_score %}
+                                            {{ data.highest_score }}/54
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if data.average_score %}
+                                            {{ data.average_score|floatformat:1 }}/54
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if data.latest_attempt %}
+                                            {% if data.latest_attempt.status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif data.latest_attempt.status == 'in_progress' %}
+                                                <span class="badge bg-warning">In Progress</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Not Started</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">Not Assigned</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    {% else %}
-                    <p class="text-muted">No students assigned yet.</p>
-                    {% endif %}
-                    {% endwith %}
                 </div>
             </div>
         </div>

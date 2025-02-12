@@ -12,7 +12,7 @@ urlpatterns = [
     path('exams/<int:exam_pk>/questions/add/',
          views.QuestionCreateView.as_view(), name='passage_create'),
     path('exams/<int:exam_pk>/questions/<int:pk>/',
-         views.PassageDetailView.as_view(), name='passage_detail'),
+         views.QuestionDetailView.as_view(), name='passage_detail'),
     
     # Student URLs
     path('my-exams/', views.StudentExamListView.as_view(), name='student_exam_list'),
@@ -24,6 +24,8 @@ urlpatterns = [
     # API endpoints
     path('my-exams/<int:exam_pk>/submit-answer/', 
          views.SubmitAnswerView.as_view(), name='submit_answer'),
-    path('my-exams/<int:pk>/check-time/', 
+    path('my-exams/<int:pk>/check-time/',
          views.CheckTimeRemainingView.as_view(), name='check_time'),
+    path('my-exams/<int:pk>/reset-timer/',
+         views.ResetTimerView.as_view(), name='reset_timer'),
 ]

@@ -13,11 +13,6 @@ class ExamForm(forms.ModelForm):
 
 class PassageQuestionForm(forms.Form):
     """Form for adding a passage with its question and choices"""
-    section = forms.ChoiceField(
-        choices=[(1, 'Section 1'), (2, 'Section 2')],
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        label="Section"
-    )
     passage_text = forms.CharField(
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
         label="Reading Passage"
@@ -48,12 +43,12 @@ class PassageQuestionForm(forms.Form):
         label="Correct Answer"
     )
 
-    def save(self, exam):
+    def save(self, exam, section):
         """Create the passage, question, and choices"""
         passage = ReadingPassage.objects.create(
             exam=exam,
             text=self.cleaned_data['passage_text'],
-            section=self.cleaned_data['section']
+            section=section
         )
         
         question = Question.objects.create(

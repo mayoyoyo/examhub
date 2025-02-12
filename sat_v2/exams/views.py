@@ -8,10 +8,11 @@ from django.utils import timezone
 from django.db import transaction
 from django.contrib import messages
 from django.forms import modelformset_factory
+from django.db.models import Avg, Max
 
 from .models import Exam, ReadingPassage, Question, Choice, StudentExam, StudentAnswer
 from .forms import ExamForm, PassageQuestionForm
-from accounts.models import Student, Academy
+from accounts.models import Student, Academy, User
 
 class AcademyRequiredMixin(UserPassesTestMixin):
     def test_func(self):
@@ -55,7 +56,30 @@ class ExamDetailView(AcademyRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['students'] = Student.objects.filter(academy_profile=self.request.user)
+        academy = Academy.objects.get(id=self.request.user.id)
+        students = Student.objects.filter(academy_profile=academy)
+        
+        # Get all student attempts for this exam
+        attempts = StudentExam.objects.filter(exam=self.object)
+        
+        # Create a dict of student data including exam attempts
+        student_data = []
+        for student in students:
+            student_attempts = attempts.filter(student=student)
+            completed_attempts = student_attempts.filter(status='completed')
+            
+            data = {
+                'student': student,
+                'total_attempts': student_attempts.count(),
+                'completed_attempts': completed_attempts.count(),
+                'average_score': completed_attempts.aggregate(Avg('score'))['score__avg'] or 0,
+                'highest_score': completed_attempts.aggregate(Max('score'))['score__max'] or 0,
+                'latest_attempt': student_attempts.order_by('-completed_at').first()
+            }
+            student_data.append(data)
+            
+        context['students'] = students
+        context['student_data'] = student_data
         return context
 
 class QuestionCreateView(AcademyRequiredMixin, View):
@@ -67,16 +91,27 @@ class QuestionCreateView(AcademyRequiredMixin, View):
         return super().dispatch(request, *args, **kwargs)
     
     def get(self, request, *args, **kwargs):
+        section = request.GET.get('section')
+        if not section or section not in ['1', '2']:
+            messages.error(request, 'Invalid section specified.')
+            return redirect('exam_detail', pk=self.exam.pk)
+            
         return render(request, self.template_name, {
             'form': PassageQuestionForm(),
-            'exam': self.exam
+            'exam': self.exam,
+            'section': section
         })
     
     def post(self, request, *args, **kwargs):
+        section = request.GET.get('section')
+        if not section or section not in ['1', '2']:
+            messages.error(request, 'Invalid section specified.')
+            return redirect('exam_detail', pk=self.exam.pk)
+            
         form = PassageQuestionForm(request.POST)
         if form.is_valid():
             try:
-                passage = form.save(self.exam)
+                passage = form.save(self.exam, int(section))
                 messages.success(request, 'Question added successfully.')
                 return redirect('exam_detail', pk=self.exam.pk)
             except ValueError as e:
@@ -85,6 +120,15 @@ class QuestionCreateView(AcademyRequiredMixin, View):
             'form': form,
             'exam': self.exam
         })
+
+class QuestionDetailView(AcademyRequiredMixin, DetailView):
+    model = ReadingPassage
+    template_name = 'exams/passage_detail.html'
+    context_object_name = 'passage'
+
+    def get_queryset(self):
+        academy = Academy.objects.get(id=self.request.user.id)
+        return ReadingPassage.objects.filter(exam__academy=academy)
 
 class AssignExamView(AcademyRequiredMixin, View):
     def post(self, request, pk):
@@ -178,35 +222,54 @@ class SubmitAnswerView(StudentRequiredMixin, View):
 class SubmitExamView(StudentRequiredMixin, View):
     @transaction.atomic
     def post(self, request, pk):
-        student_exam = get_object_or_404(
-            StudentExam,
-            pk=pk,
-            student=request.user,
-            status='in_progress'
-        )
+        try:
+            student_exam = StudentExam.objects.get(pk=pk)
+            
+            # Check if exam exists but doesn't belong to user
+            if student_exam.student != request.user:
+                messages.error(request, 'This exam does not belong to you.')
+                return redirect('student_exam_list')
+            
+            # Check if exam exists but isn't in progress
+            if student_exam.status != 'in_progress':
+                messages.error(request, f'This exam cannot be submitted because its status is "{student_exam.status}".')
+                if student_exam.status == 'completed':
+                    return redirect('exam_results', pk=pk)
+                return redirect('student_exam_list')
+                
+        except StudentExam.DoesNotExist:
+            messages.error(request, 'The specified exam was not found.')
+            return redirect('student_exam_list')
         
         # Calculate scores
-        answers = student_exam.answers.all()
-        total_correct = answers.filter(is_correct=True).count()
-        section1_correct = answers.filter(
-            is_correct=True,
-            question__passage__section=1
-        ).count()
-        section2_correct = answers.filter(
-            is_correct=True,
-            question__passage__section=2
-        ).count()
-        
-        # Update student exam
-        student_exam.status = 'completed'
-        student_exam.completed_at = timezone.now()
-        student_exam.score = total_correct
-        student_exam.section1_score = section1_correct
-        student_exam.section2_score = section2_correct
-        student_exam.save()
+        with transaction.atomic():
+            # First, mark all answers as correct/incorrect
+            for answer in student_exam.answers.all():
+                answer.is_correct = answer.selected_choice.is_correct
+                answer.save()
+
+            # Then calculate totals
+            answers = student_exam.answers.all()
+            total_correct = answers.filter(is_correct=True).count()
+            section1_correct = answers.filter(
+                is_correct=True,
+                question__passage__section=1
+            ).count()
+            section2_correct = answers.filter(
+                is_correct=True,
+                question__passage__section=2
+            ).count()
+            
+            # Update student exam
+            student_exam.status = 'completed'
+            student_exam.completed_at = timezone.now()
+            student_exam.score = total_correct
+            student_exam.section1_score = section1_correct
+            student_exam.section2_score = section2_correct
+            student_exam.save()
         
         # Update student statistics
-        student = request.user
+        student = Student.objects.get(id=request.user.id)
         student.total_tests_taken += 1
         if student.average_score is None:
             student.average_score = total_correct
@@ -231,6 +294,21 @@ class ExamResultsView(StudentRequiredMixin, DetailView):
         )
 
 # API Views for exam timer
+class ResetTimerView(StudentRequiredMixin, View):
+    def post(self, request, pk):
+        student_exam = get_object_or_404(
+            StudentExam,
+            pk=pk,
+            student=request.user,
+            status='in_progress'
+        )
+        
+        # Reset the timer by updating started_at
+        student_exam.started_at = timezone.now()
+        student_exam.save()
+        
+        return JsonResponse({'success': True})
+
 class CheckTimeRemainingView(StudentRequiredMixin, View):
     def get(self, request, pk):
         student_exam = get_object_or_404(

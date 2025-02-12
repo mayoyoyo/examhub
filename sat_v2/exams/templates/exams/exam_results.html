@@ -56,7 +56,7 @@
 
                 <div class="questions">
                     {% for question in passage.questions.all %}
-                    {% with student_answer=student_exam.answers.get_or_none(question=question) %}
+                    {% with student_answer=student_exam|get_answer:question %}
                     <div class="question mb-4 {% if student_answer.is_correct %}correct-answer{% else %}incorrect-answer{% endif %}">
                         <h5>Question {{ forloop.counter }}</h5>
                         <p>{{ question.text }}</p>

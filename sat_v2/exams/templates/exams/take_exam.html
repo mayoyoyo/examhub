@@ -1,4 +1,5 @@
 {% extends 'registration/base.html' %}
+{% load exam_filters %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -12,68 +13,47 @@
         </div>
     </div>
 
-    <div class="row mt-5">
-        <!-- Navigation Sidebar -->
-        <div class="col-md-3">
-            <div class="card sticky-top" style="top: 70px;">
-                <div class="card-body">
-                    <h5 class="card-title">Navigation</h5>
-                    <div class="list-group">
-                        {% for section in "12"|make_list %}
-                        <div class="mb-3">
-                            <h6>Section {{ section }}</h6>
-                            {% with passages=student_exam.exam.passages.all %}
-                            {% for passage in passages %}
-                            {% if passage.section == section|add:"0" %}
-                            <a href="#passage-{{ passage.id }}" 
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Passage {{ passage.order }}
-                                <span class="badge bg-primary rounded-pill question-counter" 
-                                      data-passage="{{ passage.id }}">0/4</span>
-                            </a>
-                            {% endif %}
-                            {% endfor %}
-                            {% endwith %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
+    <div class="row mt-5 justify-content-center">
         <!-- Main Content -->
-        <div class="col-md-9">
+        <div class="col-md-8">
             <form id="exam-form" method="post" action="{% url 'submit_exam' student_exam.pk %}">
                 {% csrf_token %}
                 
-                {% for section in "12"|make_list %}
-                <div class="mb-5">
-                    <h3>Section {{ section }}</h3>
+                <!-- Progress indicator -->
+                <div class="progress mb-4">
+                    <div class="progress-bar" role="progressbar" style="width: 0%" id="progress-bar"></div>
+                </div>
+
+                <!-- Section 1 -->
+                <div id="section-1" class="section-container">
+                    <h3 class="mb-4">Section 1</h3>
                     {% with passages=student_exam.exam.passages.all %}
                     {% for passage in passages %}
-                    {% if passage.section == section|add:"0" %}
-                    <div class="card mb-4" id="passage-{{ passage.id }}">
-                        <div class="card-body">
-                            <h4 class="card-title">Passage {{ passage.order }}</h4>
-                            <div class="passage-text mb-4">
-                                {{ passage.text|linebreaks }}
-                            </div>
-
-                            <div class="questions">
-                                {% for question in passage.questions.all %}
-                                <div class="question mb-4">
-                                    <h5>Question {{ forloop.counter }}</h5>
+                    {% if passage.section == 1 %}
+                    {% with question=passage.question %}
+                    {% if question %}
+                    <div class="question-container" data-section="1">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="passage-text mb-4">
+                                    {{ passage.text|linebreaks }}
+                                </div>
+                                <div class="question">
+                                    {% with section_passages=student_exam.exam.passages.all|filter_section:"1" %}
+                                    {% with question_number=forloop.counter0|add:1 %}
+                                    <h5>Question {{ question_number }}</h5>
+                                    {% endwith %}
+                                    {% endwith %}
                                     <p>{{ question.text }}</p>
-                                    
                                     <div class="choices">
                                         {% for choice in question.choices.all %}
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input question-choice" 
-                                                   type="radio" 
-                                                   name="question_{{ question.id }}" 
+                                            <input class="form-check-input question-choice"
+                                                   type="radio"
+                                                   name="question_{{ question.id }}"
                                                    id="choice_{{ choice.id }}"
                                                    value="{{ choice.id }}"
-                                                   data-passage="{{ passage.id }}"
+                                                   data-section="1"
                                                    data-question="{{ question.id }}">
                                             <label class="form-check-label" for="choice_{{ choice.id }}">
                                                 {{ choice.text }}
@@ -82,22 +62,122 @@
                                         {% endfor %}
                                     </div>
                                 </div>
-                                {% endfor %}
                             </div>
                         </div>
                     </div>
                     {% endif %}
+                    {% endwith %}
+                    {% endif %}
                     {% endfor %}
                     {% endwith %}
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="button" class="btn btn-primary" id="submit-section-1">Submit Section 1</button>
+                    </div>
                 </div>
-                {% endfor %}
 
-                <div class="d-grid gap-2 mb-5">
-                    <button type="submit" class="btn btn-primary btn-lg" id="submit-exam">
-                        Submit Exam
-                    </button>
+                <!-- Section 2 -->
+                <div id="section-2" class="section-container" style="display: none;">
+                    <h3 class="mb-4">Section 2</h3>
+                    {% with passages=student_exam.exam.passages.all %}
+                    {% for passage in passages %}
+                    {% if passage.section == 2 %}
+                    {% with question=passage.question %}
+                    {% if question %}
+                    <div class="question-container" style="display: none;" data-section="2">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="passage-text mb-4">
+                                    {{ passage.text|linebreaks }}
+                                </div>
+                                <div class="question">
+                                    {% with section_passages=student_exam.exam.passages.all|filter_section:"2" %}
+                                    {% with question_number=forloop.counter0|add:1 %}
+                                    <h5>Question {{ question_number }}</h5>
+                                    {% endwith %}
+                                    {% endwith %}
+                                    <p>{{ question.text }}</p>
+                                    <div class="choices">
+                                        {% for choice in question.choices.all %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input question-choice"
+                                                   type="radio"
+                                                   name="question_{{ question.id }}"
+                                                   id="choice_{{ choice.id }}"
+                                                   value="{{ choice.id }}"
+                                                   data-section="2"
+                                                   data-question="{{ question.id }}">
+                                            <label class="form-check-label" for="choice_{{ choice.id }}">
+                                                {{ choice.text }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submit-exam">
+                            Submit Exam
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-secondary" id="prev-question" style="display: none;">Previous Question</button>
+                    <button type="button" class="btn btn-primary" id="next-question" style="display: none;">Next Question</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modals -->
+<div class="modal fade" id="section1Modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Submit Section 1</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to submit Section 1? You won't be able to change your answers after submission.</p>
+                <div id="section1Warning" class="alert alert-warning" style="display: none;">
+                    <p>Some questions in Section 1 are not answered. Are you sure you want to proceed?</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmSection1Submit">Submit Section 1</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="examSubmitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Submit Exam</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to submit your exam? This action cannot be undone.</p>
+                <div id="examWarning" class="alert alert-warning" style="display: none;">
+                    <p>Some questions in Section 2 are not answered. Are you sure you want to proceed?</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmExamSubmit">Submit Exam</button>
+            </div>
         </div>
     </div>
 </div>
@@ -110,9 +190,39 @@
         padding: 1.5rem;
         border-radius: 0.375rem;
     }
-    .sticky-top { z-index: 1020; }
     #timer-bar { z-index: 1030; }
-    .question { border-top: 1px solid #dee2e6; padding-top: 1.5rem; }
+    .question { padding-top: 1.5rem; }
+    
+    /* Progress bar styling */
+    .progress {
+        height: 0.5rem;
+        background-color: #e9ecef;
+        border-radius: 0.25rem;
+        margin-top: 1rem;
+    }
+    .progress-bar {
+        background-color: #0d6efd;
+        transition: width 0.3s ease;
+    }
+    
+    /* Navigation buttons */
+    #prev-question, #next-question {
+        min-width: 120px;
+    }
+    
+    /* Question container */
+    .question-container {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .question-container[style*="display: block"] {
+        opacity: 1;
+    }
+    
+    /* Section transitions */
+    .section-container {
+        transition: opacity 0.3s ease;
+    }
 </style>
 {% endblock %}
 
@@ -122,19 +232,70 @@ document.addEventListener('DOMContentLoaded', function() {
     let timerElement = document.getElementById('timer');
     let examForm = document.getElementById('exam-form');
     let submitButton = document.getElementById('submit-exam');
+    let prevButton = document.getElementById('prev-question');
+    let nextButton = document.getElementById('next-question');
+    let progressBar = document.getElementById('progress-bar');
+    let currentSection = 1;
+    let currentQuestionIndex = 0;
     
-    // Update question counters
-    function updateQuestionCounter(passageId) {
-        const counter = document.querySelector(`[data-passage="${passageId}"] .question-counter`);
-        const totalQuestions = document.querySelectorAll(`[data-passage="${passageId}"].question-choice`).length / 4;
-        const answeredQuestions = document.querySelectorAll(`[data-passage="${passageId}"].question-choice:checked`).length;
-        counter.textContent = `${answeredQuestions}/${totalQuestions}`;
+    const questions = {
+        1: Array.from(document.querySelectorAll('[data-section="1"].question-container')),
+        2: Array.from(document.querySelectorAll('[data-section="2"].question-container'))
+    };
+
+    // Initialize questions
+    function initializeQuestions() {
+        // Hide all questions except the first one in section 1
+        questions[1].forEach((q, index) => {
+            q.style.display = index === 0 ? 'block' : 'none';
+        });
+        questions[2].forEach(q => q.style.display = 'none');
+        updateNavButtons();
+        updateProgress();
     }
+    
+    // Call initialization
+    if (questions[1].length > 0) {
+        initializeQuestions();
+    }
+
+    // Navigation functions
+    function showQuestion(index) {
+        questions[currentSection].forEach(q => q.style.display = 'none');
+        if (index >= 0 && index < questions[currentSection].length) {
+            questions[currentSection][index].style.display = 'block';
+            currentQuestionIndex = index;
+            updateNavButtons();
+            updateProgress();
+        }
+    }
+
+    function updateNavButtons() {
+        prevButton.style.display = currentQuestionIndex > 0 ? 'block' : 'none';
+        nextButton.style.display = currentQuestionIndex < questions[currentSection].length - 1 ? 'block' : 'none';
+    }
+
+    function updateProgress() {
+        const totalQuestions = questions[1].length + questions[2].length;
+        const currentOverallIndex = currentSection === 1 ?
+            currentQuestionIndex :
+            questions[1].length + currentQuestionIndex;
+        const progress = (currentOverallIndex / totalQuestions) * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+
+    // Event Listeners
+    prevButton.addEventListener('click', () => {
+        showQuestion(currentQuestionIndex - 1);
+    });
+
+    nextButton.addEventListener('click', () => {
+        showQuestion(currentQuestionIndex + 1);
+    });
 
     // Handle answer selection
     document.querySelectorAll('.question-choice').forEach(choice => {
         choice.addEventListener('change', function() {
-            const passageId = this.dataset.passageId;
             const questionId = this.dataset.questionId;
             
             // Submit answer to server
@@ -146,15 +307,54 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: `question_id=${questionId}&choice_id=${this.value}`
             });
-            
-            updateQuestionCounter(passageId);
         });
     });
 
-    // Initialize all question counters
-    document.querySelectorAll('.question-counter').forEach(counter => {
-        const passageId = counter.dataset.passage;
-        updateQuestionCounter(passageId);
+    // Initialize modals
+    const section1Modal = new bootstrap.Modal(document.getElementById('section1Modal'));
+    const examSubmitModal = new bootstrap.Modal(document.getElementById('examSubmitModal'));
+
+    // Section 1 submission
+    document.getElementById('submit-section-1').addEventListener('click', function() {
+        // Check if all questions in section 1 are answered
+        const unansweredQuestions = questions[1].filter(q => {
+            const inputs = q.querySelectorAll('input[type="radio"]');
+            return !Array.from(inputs).some(input => input.checked);
+        });
+
+        // Show warning in modal if there are unanswered questions
+        document.getElementById('section1Warning').style.display =
+            unansweredQuestions.length > 0 ? 'block' : 'none';
+        
+        section1Modal.show();
+    });
+
+    // Handle section 1 modal confirmation
+    document.getElementById('confirmSection1Submit').addEventListener('click', function() {
+        section1Modal.hide();
+        
+        // Reset timer for section 2
+        fetch('{% url "reset_timer" student_exam.pk %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        }).then(() => {
+            // Hide section 1 and show section 2
+            document.getElementById('section-1').style.display = 'none';
+            document.getElementById('section-2').style.display = 'block';
+            currentSection = 2;
+            currentQuestionIndex = 0;
+            showQuestion(0);
+            
+            // Disable all section 1 inputs
+            questions[1].forEach(q => {
+                q.querySelectorAll('input').forEach(input => {
+                    input.disabled = true;
+                });
+            });
+        });
     });
 
     // Timer functionality
@@ -167,7 +367,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
                 
                 if (data.should_submit) {
-                    submitButton.click();
+                    // Disable the beforeunload handler before auto-submitting
+                    window.removeEventListener('beforeunload', beforeUnloadHandler);
+                    // Force submit without validation when time expires
+                    examForm.submit();
                 }
             });
     }
@@ -177,16 +380,33 @@ document.addEventListener('DOMContentLoaded', function() {
     checkTimeRemaining(); // Initial check
 
     // Confirm before leaving page
-    window.addEventListener('beforeunload', function(e) {
+    const beforeUnloadHandler = function(e) {
         e.preventDefault();
         e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+
+    // Handle exam submission
+    document.getElementById('submit-exam').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Check if all questions in section 2 are answered
+        const unansweredQuestions = questions[2].filter(q => {
+            const inputs = q.querySelectorAll('input[type="radio"]');
+            return !Array.from(inputs).some(input => input.checked);
+        });
+
+        // Show warning in modal if there are unanswered questions
+        document.getElementById('examWarning').style.display =
+            unansweredQuestions.length > 0 ? 'block' : 'none';
+        
+        examSubmitModal.show();
     });
 
-    // Handle form submission
-    examForm.addEventListener('submit', function(e) {
-        if (!confirm('Are you sure you want to submit your exam? This action cannot be undone.')) {
-            e.preventDefault();
-        }
+    // Handle exam modal confirmation
+    document.getElementById('confirmExamSubmit').addEventListener('click', function() {
+        examSubmitModal.hide();
+        examForm.submit();
     });
 });
 </script>
