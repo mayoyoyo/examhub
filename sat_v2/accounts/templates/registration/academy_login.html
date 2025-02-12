@@ -1,77 +1,47 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Academy Login - SAT Practice Test</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .errorlist {
-            color: red;
-            list-style: none;
-            padding: 0;
-            margin: 5px 0;
-        }
-        .login-options {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-        }
-    </style>
-</head>
-<body>
-    <h2>Academy Login</h2>
-    
-    {% if form.errors %}
-        <div class="errorlist">
-            Your email and password didn't match. Please try again.
-        </div>
-    {% endif %}
+{% extends 'registration/base.html' %}
+{% load form_filters %}
 
-    <form method="post">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="id_username">Email:</label>
-            {{ form.username }}
+{% block title %}Academy Login - SAT Practice Test{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Academy Login</h2>
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        Your email and password didn't match. Please try again.
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Email:</label>
+                            {{ form.username|add_class:"form-control" }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">Password:</label>
+                            {{ form.password|add_class:"form-control" }}
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                        <input type="hidden" name="next" value="{{ next }}" />
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-muted">
+                            Are you a student or teacher? 
+                            <a href="{% url 'accounts:login' %}">Login here</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="id_password">Password:</label>
-            {{ form.password }}
-        </div>
-        <button type="submit">Login</button>
-        <input type="hidden" name="next" value="{{ next }}" />
-    </form>
-    
-    <div class="login-options">
-        <p>Are you a student or teacher? <a href="{% url 'accounts:login' %}">Login here</a></p>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

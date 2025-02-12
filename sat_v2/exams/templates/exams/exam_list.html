@@ -1,0 +1,43 @@
+{% extends 'registration/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Exams</h2>
+        {% if user.is_academy %}
+        <a href="{% url 'exam_create' %}" class="btn btn-primary">Create New Exam</a>
+        {% endif %}
+    </div>
+
+    {% if exams %}
+    <div class="row">
+        {% for exam in exams %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ exam.title }}</h5>
+                    <p class="card-text">
+                        <small class="text-muted">Created: {{ exam.created_at|date:"M d, Y" }}</small>
+                    </p>
+                    <p class="card-text">
+                        Status: 
+                        {% if exam.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </p>
+                    <p class="card-text">Time Limit: {{ exam.time_limit }} minutes</p>
+                    <a href="{% url 'exam_detail' exam.pk %}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        No exams found. {% if user.is_academy %}Click the button above to create your first exam.{% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

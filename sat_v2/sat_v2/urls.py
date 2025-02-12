@@ -6,6 +6,7 @@ urlpatterns = [
     path('', RedirectView.as_view(pattern_name='accounts:login'), name='home'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
+    path('dashboard/', include('exams.urls')),  # Added exams URLs under dashboard/
 ]
 
 # Add Django's authentication URLs

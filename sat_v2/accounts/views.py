@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
@@ -12,7 +12,7 @@ class StudentRegistrationView(CreateView):
     model = Student
     form_class = StudentRegistrationForm
     template_name = 'registration/student_register.html'
-    success_url = reverse_lazy('login')
+    success_url = reverse_lazy('accounts:profile')
 
     def form_valid(self, form):
         user = form.save()
@@ -28,7 +28,7 @@ class TeacherRegistrationView(CreateView):
     model = Teacher
     form_class = TeacherRegistrationForm
     template_name = 'registration/teacher_register.html'
-    success_url = reverse_lazy('login')
+    success_url = reverse_lazy('accounts:profile')
 
     def form_valid(self, form):
         user = form.save()
@@ -77,3 +77,8 @@ def profile(request):
         })
     
     return render(request, 'registration/profile.html', context)
+
+def logout_view(request):
+    """Custom logout view that supports GET requests"""
+    logout(request)
+    return redirect('accounts:login')

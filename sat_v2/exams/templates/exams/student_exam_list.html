@@ -1,0 +1,79 @@
+{% extends 'registration/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">My Exams</h2>
+
+    {% if student_exams %}
+    <div class="row">
+        {% for student_exam in student_exams %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ student_exam.exam.title }}</h5>
+                    <p class="card-text">
+                        <small class="text-muted">Assigned: {{ student_exam.created_at|date:"M d, Y" }}</small>
+                    </p>
+                    
+                    {% if student_exam.status == 'completed' %}
+                    <div class="mb-3">
+                        <span class="badge bg-success">Completed</span>
+                        <p class="mt-2">
+                            Score: {{ student_exam.score }}/54<br>
+                            Section 1: {{ student_exam.section1_score }}/27<br>
+                            Section 2: {{ student_exam.section2_score }}/27
+                        </p>
+                        <p class="text-muted">
+                            <small>Completed on {{ student_exam.completed_at|date:"M d, Y" }}</small>
+                        </p>
+                        <a href="{% url 'exam_results' student_exam.pk %}" class="btn btn-outline-primary">View Results</a>
+                    </div>
+                    {% elif student_exam.status == 'in_progress' %}
+                    <div class="mb-3">
+                        <span class="badge bg-warning">In Progress</span>
+                        <p class="mt-2">
+                            Started: {{ student_exam.started_at|timesince }} ago
+                        </p>
+                        <a href="{% url 'take_exam' student_exam.pk %}" class="btn btn-warning">Continue Exam</a>
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <span class="badge bg-secondary">Not Started</span>
+                        <p class="mt-2">
+                            Time Limit: {{ student_exam.exam.time_limit }} minutes<br>
+                            Sections: 2 (27 questions each)
+                        </p>
+                        <form method="post" action="{% url 'start_exam' student_exam.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary" onclick="return confirm('Are you ready to start? The timer will begin immediately.')">
+                                Start Exam
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <h4 class="alert-heading">No Exams Found</h4>
+        <p class="mb-0">You haven't been assigned any exams yet. Please contact your academy administrator.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    // Confirm exam start
+    document.querySelectorAll('form[action*="start_exam"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Are you ready to start the exam? The timer will begin immediately.')) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

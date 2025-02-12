@@ -50,7 +50,7 @@ class User(AbstractUser):
     
     def __str__(self):
         if self.is_academy:
-            return self.first_name  # For academy users, first_name stores the name
+            return self.first_name  # For academy users, first_name stores the academy name
         return f"{self.first_name} {self.last_name}"
     
     class Meta:
